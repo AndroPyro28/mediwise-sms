@@ -32,7 +32,6 @@ const DoctorsClient: React.FC<InventoryClientProps> = ({ currentUser }) => {
     key: ["doctors", "barangay", currentUser.barangayId],
   });
 
-  console.log(doctor.data);
   const { onOpen } = useModal();
   const [globalFilter, setGlobalFilter] = useState("");
 

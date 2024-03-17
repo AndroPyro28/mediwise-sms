@@ -49,8 +49,6 @@ const Calendar: React.FC<CalendarClientProps> = ({ currentUser }) => {
         })
       : [];
 
-      console.log(currentEvents)
-
   type EventData = {
     id: string;
     title: string;
@@ -96,7 +94,7 @@ const Calendar: React.FC<CalendarClientProps> = ({ currentUser }) => {
     try {
       await apiClient.patch(`/events/${eventId}`, data);
     } catch (error) {
-      console.log(error)
+      console.log(error);
       console.error("error delete update");
       toast.error("Event did not update");
     } finally {
@@ -132,7 +130,7 @@ const Calendar: React.FC<CalendarClientProps> = ({ currentUser }) => {
   };
 
   const handleEventClick = (calendarApi: any) => {
-    onOpen("deleteAnnouncement", {calendarApi})
+    onOpen("deleteAnnouncement", { calendarApi });
   };
 
   const handleDeleteEvent = ({ event }: any) => {

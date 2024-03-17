@@ -53,7 +53,7 @@ model Barangay {
   WorkSchedule    WorkSchedule[]
   Appointment     Appointment[]
   events          Event[]
-  prescriptions    prescription[]
+  prescriptions   prescription[]
 }
 
 model RequestedItem {

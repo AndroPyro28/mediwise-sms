@@ -14,7 +14,6 @@ type AppointmentSummaryProps = {
 };
 
 const AppointmentSummary = ({ data }: AppointmentSummaryProps) => {
-  console.log("🚀 ~ AppointmentSummary ~ data:", data)
   return (
     <Table>
       <TableCaption>A list of appointments per month</TableCaption>

@@ -3,13 +3,13 @@ import * as nodemailer from "nodemailer";
 const mailTransporter = nodemailer.createTransport({
   service: "gmail",
   secure: false,
-  auth: { 
+  auth: {
     user: process.env.NODEMAILER_GMAIL,
     pass: process.env.NODEMAILER_PASSWORD,
   },
   tls: {
-    rejectUnauthorized: false
-}
+    rejectUnauthorized: false,
+  },
 });
 
 const sendMail = ({

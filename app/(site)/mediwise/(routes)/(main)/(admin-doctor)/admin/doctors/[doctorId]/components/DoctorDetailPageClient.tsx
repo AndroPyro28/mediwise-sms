@@ -46,7 +46,6 @@ const DoctorDetailPageClient = () => {
     },
   });
 
-  console.log(doctor)
   const router = useRouter();
 
   const { onOpen } = useModal();

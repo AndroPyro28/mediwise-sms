@@ -5,22 +5,27 @@ import GoogleProviders from "next-auth/providers/google";
 import GithubProviders from "next-auth/providers/github";
 import FacebookProviders from "next-auth/providers/facebook";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-
+import Auth0Provider from "next-auth/providers/auth0";
 import prisma from "@/lib/prisma";
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-    FacebookProviders({
-      clientId: process.env.FACEBOOK_CLIENT_ID as string,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRETS as string,
-
-      authorization: {
-        params: {
-          role: "PATIENT" || "ADMIN",
-        },
-      },
+    Auth0Provider({
+      clientId: process.env.AUTH0_CLIENT_ID || "",
+      clientSecret: process.env.AUTH0_CLIENT_SECRET || "",
+      issuer: process.env.AUTH0_ISSUER,
     }),
+    // FacebookProviders({
+    //   clientId: process.env.FACEBOOK_CLIENT_ID as string,
+    //   clientSecret: process.env.FACEBOOK_CLIENT_SECRETS as string,
+    //   authorization: "https://www.facebook.com/v11.0/dialog/oauth?scope=email",
+    //   // authorization: {
+    //   //   params: {
+    //   //     role: "PATIENT" || "ADMIN",
+    //   //   },
+    //   // },
+    // }),
     GithubProviders({
       clientId: process.env.GITHUB_CLIENT_ID as string,
       clientSecret: process.env.GITHUB_CLIENT_SECRETS as string,
@@ -58,7 +63,7 @@ export const authOptions: AuthOptions = {
           (i.e., the request IP address) 
         */
 
-          console.log(credentials)
+        console.log(credentials);
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Invalid credentials. Please fill in all fields");
         }
@@ -72,7 +77,6 @@ export const authOptions: AuthOptions = {
         if (!user || !user?.hashedPassword) {
           throw new Error("Invalid credentials");
         }
-        
 
         const isCorrectPassword = await bcrypt.compare(
           credentials.password,
@@ -82,11 +86,14 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        if(credentials.type === "sms" && user.role === "STOCK_MANAGER" || credentials.type === "mediwise" && user.role !== "STOCK_MANAGER") {
+        if (
+          (credentials.type === "sms" && user.role === "STOCK_MANAGER") ||
+          (credentials.type === "mediwise" && user.role !== "STOCK_MANAGER")
+        ) {
           return user;
         }
 
-        return null
+        return null;
         // return { ...user, role: user.role.toString() };
         /* 
           If no error and we have user data, return it

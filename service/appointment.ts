@@ -11,7 +11,7 @@ export const getAppointments = async ({
   barangayId,
   doctorId,
   patientId,
-  workScheduleId
+  workScheduleId,
 }: {
   status: AppoinmentStatus | undefined;
   date: Date | string | undefined;
@@ -20,19 +20,19 @@ export const getAppointments = async ({
   patientId: string | undefined;
   workScheduleId: string | undefined;
 }) => {
-  const d = new Date(date || new Date())
+  const d = new Date(date || new Date());
   // d.setDate(d.getDate() - 1);
-  console.log(moment(d).toDate())
+  // console.log(moment(d).toDate())
   return await prisma.appointment.findMany({
     where: {
-          status: status ?? undefined,
-          doctorId: doctorId ?? undefined,
-          barangayId: barangayId?? undefined,
-          patientId: patientId?? undefined,
-          workScheduleId: workScheduleId?? undefined,
-          date: {
-            equals: date ? moment(d).toDate() : undefined,
-          },
+      status: status ?? undefined,
+      doctorId: doctorId ?? undefined,
+      barangayId: barangayId ?? undefined,
+      patientId: patientId ?? undefined,
+      workScheduleId: workScheduleId ?? undefined,
+      date: {
+        equals: date ? moment(d).toDate() : undefined,
+      },
     },
     orderBy: {
       date: "desc",
@@ -59,19 +59,19 @@ export const getAppointmentById = async ({ id }: { id: string }) => {
       id,
     },
     include: {
-      barangay:true,
-      doctor:true,
-      patient:true,
-      appointment_item:{
+      barangay: true,
+      doctor: true,
+      patient: true,
+      appointment_item: {
         include: {
-          brgyItem:{
+          brgyItem: {
             include: {
-              items:true
-            }
+              items: true,
+            },
           },
-        }
-      }
-    }
+        },
+      },
+    },
   });
 };
 
@@ -84,7 +84,7 @@ export const createAppointment = async ({
   status,
   image_path,
   barangayId,
-  workScheduleId
+  workScheduleId,
 }: {
   title: string;
   doctorId: string;

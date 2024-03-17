@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const { onOpen } = useModal();
-  const router = useRouter()
+  const router = useRouter();
   return (
     <nav className="sticky top-0 bg-white border-gray-200 dark:bg-gray-900 flex items-center justify-center w-full gap-x-5 max-h-[90px] z-50">
       {/* <ArrowLeft
@@ -18,8 +18,6 @@ const Navbar = () => {
         onClick={() => router.push(`/`)}
       /> */}
       <div className="flex w-full px-3 md:w-[70%] items-center justify-between">
-      
-      
         <img
           src="/images/bhaLogo.png"
           className="w-[70px] md:w-[90px] "
