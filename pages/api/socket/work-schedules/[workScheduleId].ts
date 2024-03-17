@@ -1,10 +1,16 @@
 import getCurrentUserPages from "@/actions/getCurrentUser-Page";
 import prisma from "@/lib/prisma";
 import sendMail from "@/lib/smtp";
-import { RescheduleAppointmentSchema, UpdateAppointmentSchema } from "@/schema/appointment";
+import {
+  RescheduleAppointmentSchema,
+  UpdateAppointmentSchema,
+} from "@/schema/appointment";
 import { TUser } from "@/schema/user";
 import { UpdateWorkScheduleSchema } from "@/schema/work-schedule";
-import { getAppointmentById, updateAppointmentById } from "@/service/appointment";
+import {
+  getAppointmentById,
+  updateAppointmentById,
+} from "@/service/appointment";
 import { NextApiResponseServerIo } from "@/types/types";
 import { Appointment, Profile, User } from "@prisma/client";
 import { NextApiRequest } from "next";
@@ -23,8 +29,8 @@ export default async function handler(
   const workSchedule = await prisma.workSchedule.findUnique({
     where: {
       id: workScheduleId as string,
-    }
-  })
+    },
+  });
 
   if (!workScheduleId || !workSchedule) {
     return res
@@ -34,103 +40,100 @@ export default async function handler(
 
   if (req.method === "PATCH") {
     try {
-      const body = await UpdateWorkScheduleSchema.safeParseAsync(
-        req.body
-      );
-      
-    if (!body.success) {
-      return res.status(404).json({
-        errors: body.error.flatten().fieldErrors,
-        message: "Invalid body parameters",
-      });
-    }
+      const body = await UpdateWorkScheduleSchema.safeParseAsync(req.body);
 
-    const { title, start, end, allDay } = body.data;
+      if (!body.success) {
+        return res.status(404).json({
+          errors: body.error.flatten().fieldErrors,
+          message: "Invalid body parameters",
+        });
+      }
 
-    // Create a new Date object with the modified start time
-    const modifiedStart = new Date(start);
-    modifiedStart.setUTCHours(0, 0, 0, 0);
-    
-    const updatedWorkSchedule = await prisma.workSchedule.update({
+      const { title, start, end, allDay } = body.data;
+
+      // Create a new Date object with the modified start time
+      const modifiedStart = new Date(start);
+      modifiedStart.setUTCHours(0, 0, 0, 0);
+
+      const updatedWorkSchedule = await prisma.workSchedule.update({
         where: {
-            id: workScheduleId as string,
+          id: workScheduleId as string,
         },
         data: {
-            title,
-            start: start, // Use the modified start time
-            end,
-            allDay,
-            appointments: {
-                updateMany: {
-                    where: {
-                        status: {
-                            in: ['ACCEPTED', "PENDING"]
-                        }
-                    },
-                    data: {
-                        date: modifiedStart.toISOString() // Use modified start time here as well
-                    }
-                }
-            }
+          title,
+          start: start, // Use the modified start time
+          end,
+          allDay,
+          appointments: {
+            updateMany: {
+              where: {
+                status: {
+                  in: ["ACCEPTED", "PENDING"],
+                },
+              },
+              data: {
+                date: modifiedStart.toISOString(), // Use modified start time here as well
+              },
+            },
+          },
         },
         include: {
-            appointments:{
+          appointments: {
+            include: {
+              patient: {
                 include: {
-                    patient:{
-                        include: {
-                            profile:true
-                        }
-                    }
-                }
-            }   
-        }
-    });
+                  profile: true,
+                },
+              },
+            },
+          },
+        },
+      });
 
       const createNotification = async (appointment: Appointment) => {
         const notification = await prisma.notification.create({
           data: {
             userId: appointment.patientId,
             appointmentId: appointment.id,
-            content: `Your appointment has been moved.`
-          }
-        })
+            content: `Your appointment has been moved.`,
+          },
+        });
 
         const Key = `notification:${notification.userId}:create`;
         res.socket?.server?.io.emit(Key, notification);
-        
-        if(!notification) {
-          throw new Error('Notification did not create')
+
+        if (!notification) {
+          throw new Error("Notification did not create");
         }
-        
-        return notification
-      }
+
+        return notification;
+      };
 
       const students = await Promise.all(
-        updatedWorkSchedule.appointments.map((appointment) => createNotification(appointment))
+        updatedWorkSchedule.appointments.map((appointment) =>
+          createNotification(appointment)
+        )
       );
 
-    //   const content = `
-    // <div> 
-    //   <h3> hello ${appointmentUpdated.patient.profile?.firstname} ${appointmentUpdated.patient.profile?.lastname} </h3>
-    //   <p> ${appointmentUpdated.doctor.profile?.firstname} ${appointmentUpdated.doctor.profile?.lastname} ${appointmentUpdated.status.toLocaleLowerCase()} your appointment </p>
-    //   <small> - SMS ADMIN </small>
-    // </div>
-    // `;
+      //   const content = `
+      // <div>
+      //   <h3> hello ${appointmentUpdated.patient.profile?.firstname} ${appointmentUpdated.patient.profile?.lastname} </h3>
+      //   <p> ${appointmentUpdated.doctor.profile?.firstname} ${appointmentUpdated.doctor.profile?.lastname} ${appointmentUpdated.status.toLocaleLowerCase()} your appointment </p>
+      //   <small> - SMS ADMIN </small>
+      // </div>
+      // `;
 
-    // sendMail({ content, subject: "Email verification", emailTo: appointmentUpdated.patient.email as string });
+      // sendMail({ content, subject: "Email verification", emailTo: appointmentUpdated.patient.email as string });
 
-    //   const Key = `notification:${notification.userId}:create`;
-    //         console.log("new notification socket:", Key);
-    //         res.socket?.server?.io.emit(Key, notification);
+      //   const Key = `notification:${notification.userId}:create`;
+      //         console.log("new notification socket:", Key);
+      //         res.socket?.server?.io.emit(Key, notification);
 
       return res.status(200).json(updatedWorkSchedule);
-
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
-  } 
-  
-  else {
+  } else {
     // Handle any other HTTP method
     return res.status(405).json({ message: "Invalid HTTP method!" });
   }

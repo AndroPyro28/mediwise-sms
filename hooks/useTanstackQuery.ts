@@ -6,8 +6,13 @@ import qs from "query-string";
 const controller = new AbortController();
 
 export const apiClient = axios.create({
-    baseURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api`,
-  headers: { "Content-type": "application/json" },
+  baseURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api`,
+  headers: {
+    "Content-type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  },
 });
 
 type queryFnProps = {

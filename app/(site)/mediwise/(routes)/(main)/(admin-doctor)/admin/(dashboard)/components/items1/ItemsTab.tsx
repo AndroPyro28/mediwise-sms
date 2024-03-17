@@ -24,7 +24,6 @@ const ItemsTab:React.FC<ItemsTabProps> = ({currentUser}) => {
     }
   })
 
-  console.log(items.data)
 
   return (
     <div>

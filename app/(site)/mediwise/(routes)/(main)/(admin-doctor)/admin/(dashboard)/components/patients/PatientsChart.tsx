@@ -16,7 +16,6 @@ type PatientChartProps = {
 export default function PatientChart({ data }: PatientChartProps) {
   // 768px
 
-  console.log('PatientChart', data)
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart

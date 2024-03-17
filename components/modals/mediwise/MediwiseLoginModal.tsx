@@ -66,7 +66,8 @@ const MediwiseLoginModal = () => {
       }
       if (variants == "LOGIN") {
         const response = await signIn("credentials", {
-          ...values, type: "mediwise",
+          ...values,
+          type: "mediwise",
           redirect: false,
         });
 
@@ -248,10 +249,15 @@ const MediwiseLoginModal = () => {
               icon={BsGithub}
               onClick={() => socialActions("github")}
             /> */}
-            <AuthSocialButton
+            {/* <AuthSocialButton
               icon={BsFacebook}
               onClick={() => socialActions("facebook")}
+            /> */}
+            <AuthSocialButton
+              icon={BsFacebook}
+              onClick={() => socialActions("auth0")}
             />
+
             <AuthSocialButton
               icon={BsGoogle}
               onClick={() => socialActions("google")}

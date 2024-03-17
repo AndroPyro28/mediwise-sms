@@ -1,8 +1,14 @@
 import getCurrentUserPages from "@/actions/getCurrentUser-Page";
 import prisma from "@/lib/prisma";
 import sendMail from "@/lib/smtp";
-import { RescheduleAppointmentSchema, UpdateAppointmentSchema } from "@/schema/appointment";
-import { getAppointmentById, updateAppointmentById } from "@/service/appointment";
+import {
+  RescheduleAppointmentSchema,
+  UpdateAppointmentSchema,
+} from "@/schema/appointment";
+import {
+  getAppointmentById,
+  updateAppointmentById,
+} from "@/service/appointment";
 import { NextApiResponseServerIo } from "@/types/types";
 import { NextApiRequest } from "next";
 
@@ -20,8 +26,8 @@ export default async function handler(
   const appointment = await prisma.appointment.findUnique({
     where: {
       id: appointmentId as string,
-    }
-  })
+    },
+  });
 
   if (!appointmentId || !appointment) {
     return res
@@ -39,61 +45,68 @@ export default async function handler(
       });
     }
 
-    const { title, doctorId, patientId, date, status, image_path } =
-        body.data;
+    const { title, doctorId, patientId, date, status, image_path } = body.data;
 
-      const appointmentUpdated = await prisma.appointment.update({
-        where: {
-          id: appointmentId as string,
-        },
-        data: {
-          title,
-          doctorId,
-          patientId,
-          date,
-          status,
-          image_path,
-        },
-        include: {
-          doctor: {
-            include: {
-              profile:true
-            }
+    const appointmentUpdated = await prisma.appointment.update({
+      where: {
+        id: appointmentId as string,
+      },
+      data: {
+        title,
+        doctorId,
+        patientId,
+        date,
+        status,
+        image_path,
+      },
+      include: {
+        doctor: {
+          include: {
+            profile: true,
           },
-          patient: {
-            include: {
-              profile:true
-            }
-          }
-        }
-      })  
+        },
+        patient: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+    });
 
-     const notification = await prisma.notification.create({
-        data: {
-          content: `${appointmentUpdated.doctor.profile?.firstname} ${appointmentUpdated.doctor.profile?.lastname} ${appointmentUpdated.status.toLocaleLowerCase()} your appointment`,
-          appointmentId: appointmentUpdated.id,
-          userId: appointmentUpdated.patientId,
-        }
-      })
+    const notification = await prisma.notification.create({
+      data: {
+        content: `${appointmentUpdated.doctor.profile?.firstname} ${
+          appointmentUpdated.doctor.profile?.lastname
+        } ${appointmentUpdated.status.toLocaleLowerCase()} your appointment`,
+        appointmentId: appointmentUpdated.id,
+        userId: appointmentUpdated.patientId,
+      },
+    });
 
-      const content = `
+    const content = `
     <div> 
-      <h3> hello ${appointmentUpdated.patient.profile?.firstname} ${appointmentUpdated.patient.profile?.lastname} </h3>
-      <p> ${appointmentUpdated.doctor.profile?.firstname} ${appointmentUpdated.doctor.profile?.lastname} ${appointmentUpdated.status.toLocaleLowerCase()} your appointment </p>
+      <h3> hello ${appointmentUpdated.patient.profile?.firstname} ${
+      appointmentUpdated.patient.profile?.lastname
+    } </h3>
+      <p> ${appointmentUpdated.doctor.profile?.firstname} ${
+      appointmentUpdated.doctor.profile?.lastname
+    } ${appointmentUpdated.status.toLocaleLowerCase()} your appointment </p>
       <small> - SMS ADMIN </small>
     </div>
     `;
 
-    sendMail({ content, subject: "Email verification", emailTo: appointmentUpdated.patient.email as string });
+    sendMail({
+      content,
+      subject: "Email verification",
+      emailTo: appointmentUpdated.patient.email as string,
+    });
 
-      const Key = `notification:${notification.userId}:create`;
-            console.log("new notification socket:", Key);
-            res.socket?.server?.io.emit(Key, notification);
+    const Key = `notification:${notification.userId}:create`;
+    console.log("new notification socket:", Key);
+    res.socket?.server?.io.emit(Key, notification);
 
-
-      return res.status(200).json(appointmentUpdated);
-
-  } 
+    return res.status(200).json(appointmentUpdated);
+  }
   if (req.method === "PUT") {
     const body = await RescheduleAppointmentSchema.safeParseAsync(req.body);
 
@@ -104,50 +117,49 @@ export default async function handler(
       });
     }
 
-    const { date } =
-        body.data;
+    const { date } = body.data;
 
-      const appointmentUpdated = await prisma.appointment.update({
-        where: {
-          id: appointmentId as string,
-        },
-        data: {
-          date: new Date(date)
-        },
-        include: {
-          doctor: {
-            include: {
-              profile:true
-            }
-          },
-          patient: {
-            include: {
-              profile:true
-            }
-          }
-        }
-      })  
-
-     const notification = await prisma.notification.findFirst({
+    const appointmentUpdated = await prisma.appointment.update({
       where: {
-        appointmentId: appointmentId as string
-      }
-      })
-
-      const updatedNotification = await prisma.notification.update({
-        where: {
-          id: notification?.id as string
+        id: appointmentId as string,
+      },
+      data: {
+        date: new Date(date),
+      },
+      include: {
+        doctor: {
+          include: {
+            profile: true,
+          },
         },
-          data: {
-            content: `${appointmentUpdated.doctor.profile?.firstname} ${appointmentUpdated.doctor.profile?.lastname} your appointment has been rescheduled`,
-            appointmentId: appointmentUpdated.id,
-            userId: appointmentUpdated.patientId,
-            isRead:false,
-            createdAt: new Date()
-          }
-        })
+        patient: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+    });
 
-      const content = `
+    const notification = await prisma.notification.findFirst({
+      where: {
+        appointmentId: appointmentId as string,
+      },
+    });
+
+    const updatedNotification = await prisma.notification.update({
+      where: {
+        id: notification?.id as string,
+      },
+      data: {
+        content: `${appointmentUpdated.doctor.profile?.firstname} ${appointmentUpdated.doctor.profile?.lastname} your appointment has been rescheduled`,
+        appointmentId: appointmentUpdated.id,
+        userId: appointmentUpdated.patientId,
+        isRead: false,
+        createdAt: new Date(),
+      },
+    });
+
+    const content = `
     <div> 
       <h3> hello ${appointmentUpdated.patient.profile?.firstname} ${appointmentUpdated.patient.profile?.lastname} </h3>
       <p> ${appointmentUpdated.doctor.profile?.firstname} ${appointmentUpdated.doctor.profile?.lastname} your appointment has been rescheduled </p>
@@ -155,14 +167,15 @@ export default async function handler(
     </div>
     `;
 
-    sendMail({ content, subject: "Appointment Reschedule", emailTo: appointmentUpdated.patient.email as string });
-      const Key = `notification:${updatedNotification.userId}:create`;
-      res.socket?.server?.io.emit(Key, notification);
-      return res.status(200).json(appointmentUpdated);
-  } 
-  
-  
-  else {
+    sendMail({
+      content,
+      subject: "Appointment Reschedule",
+      emailTo: appointmentUpdated.patient.email as string,
+    });
+    const Key = `notification:${updatedNotification.userId}:create`;
+    res.socket?.server?.io.emit(Key, notification);
+    return res.status(200).json(appointmentUpdated);
+  } else {
     // Handle any other HTTP method
     return res.status(405).json({ message: "Invalid HTTP method!" });
   }

@@ -55,7 +55,6 @@ export const withAuth =
     let headers = {};
 
     session = await getSession();
-    console.log("🚀 ~ file: index.ts:55 ~ session:", session);
 
     if (allowAnonymous && req.method === "GET") {
       session = {

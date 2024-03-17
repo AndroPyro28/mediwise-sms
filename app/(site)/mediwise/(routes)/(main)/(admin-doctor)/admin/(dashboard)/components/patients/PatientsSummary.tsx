@@ -13,7 +13,6 @@ type PatientSummaryProps = {
   data: PatientsTotalType[];
 };
 const PatientSummary = ({ data }: PatientSummaryProps) => {
-  console.log("🚀 ~ PatientSummary ~ data:", data);
   return (
     <Table>
       <TableCaption>A list of patients per month</TableCaption>
